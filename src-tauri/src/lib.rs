@@ -20,10 +20,7 @@ pub struct AppState {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::Builder::new().callback(|app, _argv, _cwd| {
-            if let Some(window) = app.get_webview_window("main") {
-                let _ = window.show();
-                let _ = window.set_focus();
-            }
+            tray::show_main_window(app);
         }).build())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
