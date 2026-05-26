@@ -165,10 +165,16 @@ npm run dev
 npm run build
 ```
 
-打包桌面應用：
+打包桌面應用（不含簽署，僅用於一般功能測試）：
 
 ```bash
 npm run pack
+```
+
+打包並簽署（含 updater `.sig` 檔，自動更新功能需要此版本）：
+
+```bash
+npm run pack:signed
 ```
 
 ## 版本與 Release
@@ -201,8 +207,8 @@ git push origin main --tags
 
 | Secret | 說明 |
 | --- | --- |
-| `TAURI_SIGNING_PRIVATE_KEY` | `C:\Users\AwenRacious\.tauri\maildrop-updater.key` 的檔案內容 |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | 簽章密碼；目前本機產生的 key 未設定密碼時可留空 |
+| `TAURI_SIGNING_PRIVATE_KEY` | `src-tauri/updater-keys/maildrop.key` 的檔案內容（私鑰已 gitignore，請妥善保管） |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | 簽章密碼；目前 key 未設定密碼，可留空 |
 
 應用程式會檢查：
 
@@ -271,6 +277,7 @@ MailDrop/
 │  │  ├─ tray/                  # System tray setup
 │  │  └─ lib.rs                 # Tauri setup and AppState
 │  └─ tauri.conf.json
+├─ scripts/                     # 工具腳本（版本管理、簽署包版）
 ├─ docs/                        # Planning / design notes
 ├─ public/
 └─ package.json
@@ -287,7 +294,7 @@ MailDrop 會在 Tauri app data directory 建立 SQLite database：
 啟動時會自動建立下列表：
 
 - `mails`：保存收件內容、寄件者、收件者、主旨、HTML/Text body、Raw MIME、大小與接收時間
-- `app_config`：保存 `smtp_port`、`theme`、`max_mails`
+- `app_config`：保存應用程式設定
 
 預設設定：
 
@@ -296,6 +303,8 @@ MailDrop 會在 Tauri app data directory 建立 SQLite database：
 | `smtp_port` | `1025` |
 | `theme` | `system` |
 | `max_mails` | `500` |
+| `check_updates_on_startup` | `true` |
+| `auto_install_updates` | `false` |
 
 ## Frontend 與 Backend 溝通
 
@@ -331,9 +340,26 @@ Frontend 透過 `@tauri-apps/api/core` 的 `invoke()` 呼叫 Rust commands。主
 
 注意：`AUTH` 目前會直接視為成功，方便本機開發測試工具相容有送出帳密的 client。`STARTTLS` 會明確回覆 `454 TLS not available`，因為 MailDrop 目前不提供真正 TLS upgrade。開發環境請關閉 TLS / STARTTLS；本工具不應視為正式 SMTP server 安全實作。
 
+## 版本紀錄
+
+### v0.1.0
+**初始發布**
+- 本機 SMTP server（tokio 非同步，預設 port 1025）
+- 收件匣虛擬捲動列表
+- HTML / Text / Raw 三種郵件預覽模式
+- HTML 預覽信件內連結自動開啟系統瀏覽器
+- SQLite 本機保存，可設定最大保存信件數
+- 可設定 SMTP port、主題模式（亮色 / 暗色 / 系統跟隨）
+- SMTP 監聽失敗時顯示錯誤橫幅並引導至設定頁
+- 變更 SMTP port 後提示重啟，支援一鍵自動重啟
+- System tray 常駐，右鍵選單支援顯示視窗與結束程式
+- Single instance，重複啟動時聚焦既有視窗
+- 自動更新功能（Settings 可設定啟動時檢查、自動安裝）
+- GitHub Actions 自動 build 並發布 Release
+
 ## 已知注意事項
 
 - SMTP port 變更後需要重新啟動應用程式才會生效。
 - App 關閉視窗時預設隱藏到 system tray；請從 tray menu 或應用流程結束程式。
-- HTML 預覽以 iframe 呈現，請維持開發測試用途，不建議載入不可信的外部內容。
+- HTML 預覽以 sandbox iframe 呈現；信件內的連結點擊後會自動開啟系統瀏覽器，不會在 MailDrop 內部導覽。
 - `docs/vue-concurrent-scroll.md` 是早期企畫文件，目前存在編碼顯示問題；實作狀態請以程式碼與本 README 為準。

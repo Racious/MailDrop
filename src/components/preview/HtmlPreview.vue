@@ -9,17 +9,33 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import { openUrl } from '@tauri-apps/plugin-opener'
 
 const props = defineProps<{ html: string }>()
 const frame = ref<HTMLIFrameElement | null>(null)
 
-onMounted(() => {
-  if (frame.value) frame.value.srcdoc = props.html
-})
+function injectLinkHandler(iframe: HTMLIFrameElement) {
+  const doc = iframe.contentDocument
+  if (!doc) return
+  doc.addEventListener('click', (e) => {
+    const anchor = (e.target as HTMLElement).closest('a')
+    if (anchor?.href) {
+      e.preventDefault()
+      openUrl(anchor.href)
+    }
+  })
+}
 
-watch(() => props.html, (html) => {
-  if (frame.value) frame.value.srcdoc = html
-})
+function setContent(html: string) {
+  const iframe = frame.value
+  if (!iframe) return
+  iframe.srcdoc = html
+  iframe.addEventListener('load', () => injectLinkHandler(iframe), { once: true })
+}
+
+onMounted(() => setContent(props.html))
+
+watch(() => props.html, (html) => setContent(html))
 </script>
 
 <style scoped>
