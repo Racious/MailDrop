@@ -41,7 +41,15 @@ jobs:
         run: npm ci
 
       - name: Generate release body
-        run: node scripts/extract-changelog.mjs ${{ github.ref_name }}
+        id: release_body
+        shell: bash
+        run: |
+          node scripts/extract-changelog.mjs ${{ github.ref_name }}
+          {
+            echo 'body<<RELEASE_EOF'
+            cat release-body.md
+            echo 'RELEASE_EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build and publish Tauri release
         uses: tauri-apps/tauri-action@v0
@@ -52,7 +60,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'MailDrop ${{ github.ref_name }}'
-          releaseBodyPath: release-body.md
+          releaseBody: ${{ steps.release_body.outputs.body }}
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.1.4
+
+### New Features
+- 收到新信時，若視窗未在前景，工具列圖示持續閃爍直到使用者點開視窗
+- 應用程式啟動時視窗預設最大化
+
+### Bug Fixes
+- 修正 GitHub Release 說明未正確讀取 CHANGELOG 的問題
+  - `tauri-action` 不支援 `releaseBodyPath`，改以 step output 傳入 `releaseBody`
+
 ## v0.1.3
 
 ### Bug Fixes

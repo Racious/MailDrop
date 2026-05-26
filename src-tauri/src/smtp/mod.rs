@@ -5,7 +5,7 @@ pub mod session;
 use crate::db::{repository, DbPool};
 use crate::models::{Mail, MailSummary};
 use session::SmtpMessage;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, UserAttentionType};
 use tauri_plugin_notification::NotificationExt;
 
 pub async fn handle_message(msg: SmtpMessage, pool: DbPool, app_handle: AppHandle) {
@@ -77,5 +77,13 @@ pub async fn handle_message(msg: SmtpMessage, pool: DbPool, app_handle: AppHandl
             .title(&title)
             .body(&body)
             .show();
+
+        // 視窗未在前景時，工具列圖示持續閃爍直到使用者點開
+        if let Some(window) = app_handle.get_webview_window("main") {
+            let focused = window.is_focused().unwrap_or(true);
+            if !focused {
+                let _ = window.request_user_attention(Some(UserAttentionType::Critical));
+            }
+        }
     }
 }
