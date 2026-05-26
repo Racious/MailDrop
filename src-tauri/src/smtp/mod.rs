@@ -5,7 +5,7 @@ pub mod session;
 use crate::db::{repository, DbPool};
 use crate::models::{Mail, MailSummary};
 use session::SmtpMessage;
-use tauri::{AppHandle, Emitter, UserAttentionType};
+use tauri::{AppHandle, Emitter, Manager, UserAttentionType};
 use tauri_plugin_notification::NotificationExt;
 
 pub async fn handle_message(msg: SmtpMessage, pool: DbPool, app_handle: AppHandle) {
