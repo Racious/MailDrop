@@ -40,6 +40,9 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Generate release body
+        run: node scripts/extract-changelog.mjs ${{ github.ref_name }}
+
       - name: Build and publish Tauri release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -49,15 +52,7 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'MailDrop ${{ github.ref_name }}'
-          releaseBody: |
-            ## 下載
-
-            | 類型 | 檔案 |
-            |------|------|
-            | 安裝版（推薦） | `MailDrop_*_x64_en-US.msi` |
-            | 免安裝版 | `MailDrop_*_x64-setup.exe` |
-
-            > MailDrop — 本地開發用 SMTP 郵件攔截工具
+          releaseBodyPath: release-body.md
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
@@ -65,6 +60,7 @@ jobs:
       - name: Upload portable exe
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
           files: src-tauri/target/release/maildrop.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

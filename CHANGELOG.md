@@ -1,0 +1,36 @@
+# Changelog
+
+## v0.1.3
+
+### Bug Fixes
+- 修正自動更新安裝時發生 `Cannot read private member` 錯誤的問題
+  - `pendingUpdate` 由 `ref` 改為 `shallowRef`，防止 Vue Proxy 破壞 Tauri `Update` 物件的 private class fields
+  - 修正後 v0.1.2 以前的版本無法透過 in-app updater 升級，此版起恢復正常
+
+## v0.1.2
+
+### New Features
+- 新增 Windows 系統通知，收到新信時自動顯示 toast（可於 Settings → Notifications 關閉）
+- 新增信件未讀狀態：未讀信件顯示藍點 + 加粗主旨，點開後自動標記已讀
+- Sidebar Inbox badge 改為顯示未讀數量
+
+## v0.1.1
+
+### Bug Fixes
+- 修正 HTML 信件內連結點擊後在 MailDrop 內部顯示白頁的問題，現在會正確開啟系統瀏覽器
+
+## v0.1.0
+
+### Features
+- 本機 SMTP server（tokio 非同步，預設 port 1025）
+- 收件匣虛擬捲動列表
+- HTML / Text / Raw 三種郵件預覽模式
+- HTML 預覽信件內連結自動開啟系統瀏覽器
+- SQLite 本機保存，可設定最大保存信件數
+- 可設定 SMTP port、主題模式（亮色 / 暗色 / 系統跟隨）
+- SMTP 監聽失敗時顯示錯誤橫幅並引導至設定頁
+- 變更 SMTP port 後提示重啟，支援一鍵自動重啟
+- System tray 常駐，右鍵選單支援顯示視窗與結束程式
+- Single instance，重複啟動時聚焦既有視窗
+- 自動更新功能（Settings 可設定啟動時檢查、自動安裝）
+- GitHub Actions 自動 build 並發布 Release

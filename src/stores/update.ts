@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import { getVersion } from '@tauri-apps/api/app'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { check, type Update } from '@tauri-apps/plugin-updater'
@@ -18,7 +18,7 @@ export const useUpdateStore = defineStore('update', () => {
   const lastCheckedAt = ref<string | null>(null)
   const statusMessage = ref<string | null>(null)
   const errorMessage = ref<string | null>(null)
-  const pendingUpdate = ref<Update | null>(null)
+  const pendingUpdate = shallowRef<Update | null>(null)
   const downloadProgress = ref<number | null>(null)
 
   async function loadCurrentVersion() {
