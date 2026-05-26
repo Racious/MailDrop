@@ -8,6 +8,8 @@ export const useConfigStore = defineStore('config', () => {
     smtp_port: 1025,
     theme: 'system',
     max_mails: 500,
+    check_updates_on_startup: true,
+    auto_install_updates: false,
   })
   const smtpRunning = ref(false)
   const smtpError = ref<string | null>(null)

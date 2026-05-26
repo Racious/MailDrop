@@ -71,8 +71,7 @@ pub async fn handle(stream: TcpStream) -> Result<Option<SmtpMessage>, Box<dyn st
                 writer.write_all(b"221 2.0.0 Bye\r\n").await?;
                 break;
             } else if upper.starts_with("STARTTLS") {
-                // Accept without actual TLS upgrade (dev tool)
-                writer.write_all(b"220 2.0.0 Ready to start TLS\r\n").await?;
+                writer.write_all(b"454 4.7.0 TLS not available\r\n").await?;
             } else if upper.starts_with("AUTH") {
                 writer.write_all(b"235 2.7.0 Authentication successful\r\n").await?;
             } else {

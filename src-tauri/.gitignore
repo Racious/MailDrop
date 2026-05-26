@@ -9,3 +9,6 @@
 # Mobile icons (not needed for Windows build)
 /icons/android/
 /icons/ios/
+
+# Updater signing keys — private key must never be committed
+/updater-keys/*.key

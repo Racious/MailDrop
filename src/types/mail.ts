@@ -20,4 +20,6 @@ export interface AppConfig {
   smtp_port: number
   theme: 'light' | 'dark' | 'system'
   max_mails: number
+  check_updates_on_startup: boolean
+  auto_install_updates: boolean
 }

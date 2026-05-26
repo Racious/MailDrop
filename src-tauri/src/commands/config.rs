@@ -25,6 +25,16 @@ pub async fn save_config(
         repository::set_config_value(&pool, "smtp_port", &cfg.smtp_port.to_string())?;
         repository::set_config_value(&pool, "theme", &cfg.theme)?;
         repository::set_config_value(&pool, "max_mails", &cfg.max_mails.to_string())?;
+        repository::set_config_value(
+            &pool,
+            "check_updates_on_startup",
+            &cfg.check_updates_on_startup.to_string(),
+        )?;
+        repository::set_config_value(
+            &pool,
+            "auto_install_updates",
+            &cfg.auto_install_updates.to_string(),
+        )?;
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     })
     .await

@@ -25,7 +25,9 @@ CREATE TABLE IF NOT EXISTS app_config (
 INSERT OR IGNORE INTO app_config(key, value) VALUES
     ('smtp_port', '1025'),
     ('theme',     'system'),
-    ('max_mails', '500');
+    ('max_mails', '500'),
+    ('check_updates_on_startup', 'true'),
+    ('auto_install_updates', 'false');
 "#;
 
 pub fn run(pool: &DbPool) -> Result<(), Box<dyn std::error::Error>> {

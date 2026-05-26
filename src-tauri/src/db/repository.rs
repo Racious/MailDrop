@@ -116,6 +116,8 @@ pub fn get_config(pool: &DbPool) -> RepoResult<AppConfig> {
             "smtp_port"  => cfg.smtp_port  = v.parse().unwrap_or(1025),
             "theme"      => cfg.theme      = v,
             "max_mails"  => cfg.max_mails  = v.parse().unwrap_or(500),
+            "check_updates_on_startup" => cfg.check_updates_on_startup = v.parse().unwrap_or(true),
+            "auto_install_updates" => cfg.auto_install_updates = v.parse().unwrap_or(false),
             _ => {}
         }
     }

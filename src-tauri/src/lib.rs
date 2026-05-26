@@ -22,6 +22,8 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::Builder::new().callback(|app, _argv, _cwd| {
             tray::show_main_window(app);
         }).build())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             // ── Database ──────────────────────────────────────────────────

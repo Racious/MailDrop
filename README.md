@@ -171,6 +171,47 @@ npm run build
 npm run pack
 ```
 
+## 版本與 Release
+
+MailDrop 的版本號需要同時出現在三個位置：
+
+- `package.json`
+- `src-tauri/Cargo.toml`
+- `src-tauri/tauri.conf.json`
+
+請使用下列指令同步更新版本：
+
+```bash
+npm run version:set -- 0.1.1
+```
+
+建立 GitHub Release 的建議流程：
+
+```bash
+npm run version:set -- 0.1.1
+git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
+git commit -m "chore(release): bump version to 0.1.1"
+git tag v0.1.1
+git push origin main --tags
+```
+
+推送 `v*` tag 後，GitHub Actions 會執行 `.github/workflows/release.yml`，打包 Tauri 應用程式並更新 GitHub Releases。
+
+自動更新需要 Tauri updater 簽章。公鑰已寫入 `src-tauri/tauri.conf.json`，私鑰請放到 GitHub repository secrets：
+
+| Secret | 說明 |
+| --- | --- |
+| `TAURI_SIGNING_PRIVATE_KEY` | `C:\Users\AwenRacious\.tauri\maildrop-updater.key` 的檔案內容 |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | 簽章密碼；目前本機產生的 key 未設定密碼時可留空 |
+
+應用程式會檢查：
+
+```text
+https://github.com/Racious/MailDrop/releases/latest/download/latest.json
+```
+
+Settings 裡可切換啟動時檢查更新、自動安裝更新，也可手動檢查更新或開啟 Releases 頁面。
+
 ## SMTP 測試方式
 
 啟動 MailDrop 後，讓測試程式將 SMTP host 指向：
@@ -288,7 +329,7 @@ Frontend 透過 `@tauri-apps/api/core` 的 `invoke()` 呼叫 Rust commands。主
 - `AUTH`
 - `STARTTLS`
 
-注意：`AUTH` 目前直接視為成功，`STARTTLS` 會回覆 ready，但尚未實作真正 TLS upgrade。這符合本機開發工具的 MVP 取向，但不應視為正式 SMTP server 安全實作。
+注意：`AUTH` 目前會直接視為成功，方便本機開發測試工具相容有送出帳密的 client。`STARTTLS` 會明確回覆 `454 TLS not available`，因為 MailDrop 目前不提供真正 TLS upgrade。開發環境請關閉 TLS / STARTTLS；本工具不應視為正式 SMTP server 安全實作。
 
 ## 已知注意事項
 

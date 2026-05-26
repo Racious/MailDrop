@@ -45,22 +45,59 @@
       </div>
     </section>
 
+    <section class="section">
+      <h3 class="section-title">Updates</h3>
+      <div class="version-row">
+        <span>Current version</span>
+        <strong>{{ currentVersion || 'Unknown' }}</strong>
+      </div>
+      <label class="check-field">
+        <input v-model="draft.check_updates_on_startup" type="checkbox" />
+        <span>Check for updates when MailDrop starts</span>
+      </label>
+      <label class="check-field">
+        <input v-model="draft.auto_install_updates" type="checkbox" />
+        <span>Automatically download and install available updates</span>
+      </label>
+      <div class="update-actions">
+        <button class="btn btn-ghost" :disabled="checking || installing" @click="onCheckUpdates">
+          {{ checking ? 'Checking...' : 'Check for updates' }}
+        </button>
+        <button
+          v-if="updateAvailable"
+          class="btn btn-primary"
+          :disabled="installing"
+          @click="onInstallUpdate"
+        >
+          {{ installing ? 'Installing...' : `Install ${latestVersion}` }}
+        </button>
+        <button class="btn btn-ghost" @click="onOpenReleasePage">
+          Open releases
+        </button>
+      </div>
+      <div v-if="installing && downloadProgress !== null" class="progress-wrap">
+        <div class="progress-bar" :style="{ width: downloadProgress + '%' }" />
+        <span class="progress-label">{{ downloadProgress }}%</span>
+      </div>
+      <p v-if="statusMessage" class="hint">{{ statusMessage }}</p>
+      <p v-if="errorMessage" class="hint hint-danger">{{ errorMessage }}</p>
+    </section>
+
     <div class="actions">
       <button class="btn btn-primary" :disabled="saving" @click="onSave">
-        {{ saving ? 'Saving…' : 'Save Settings' }}
+        {{ saving ? 'Saving...' : 'Save Settings' }}
       </button>
     </div>
   </div>
 
-  <!-- Restart dialog -->
   <Transition name="overlay">
     <div v-if="showRestartDialog" class="overlay">
       <div class="dialog">
-        <h3 class="dialog-title">需要重新啟動</h3>
-        <p class="dialog-msg">SMTP Port 已變更，需要重新啟動應用程式才能生效。</p>
+        <h3 class="dialog-title">Restart required</h3>
+        <p class="dialog-msg">SMTP port changes take effect after restarting MailDrop.</p>
         <div class="dialog-actions">
-          <button class="btn btn-ghost" @click="showRestartDialog = false">稍後再說</button>
-          <button class="btn btn-primary" @click="onRestart">立即重啟</button>
+          <button class="btn btn-ghost" @click="showRestartDialog = false">Later</button>
+          <button class="btn btn-primary" @click="onRestart">Restart now</button>
         </div>
       </div>
     </div>
@@ -71,11 +108,23 @@
 import { reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConfigStore } from '@/stores/config'
+import { useUpdateStore } from '@/stores/update'
 import { restartApp } from '@/lib/tauri'
 import type { AppConfig } from '@/types/mail'
 
 const configStore = useConfigStore()
+const updateStore = useUpdateStore()
 const { config } = storeToRefs(configStore)
+const {
+  currentVersion,
+  latestVersion,
+  checking,
+  installing,
+  updateAvailable,
+  statusMessage,
+  errorMessage,
+  downloadProgress,
+} = storeToRefs(updateStore)
 
 const draft = reactive<AppConfig>({ ...config.value })
 const saving = ref(false)
@@ -98,12 +147,24 @@ async function onRestart() {
   showRestartDialog.value = false
   await restartApp()
 }
+
+async function onCheckUpdates() {
+  await updateStore.checkForUpdates({ autoInstall: draft.auto_install_updates })
+}
+
+async function onInstallUpdate() {
+  await updateStore.installUpdate()
+}
+
+async function onOpenReleasePage() {
+  await updateStore.openReleasePage()
+}
 </script>
 
 <style scoped>
 .settings {
   padding: 24px 32px;
-  max-width: 480px;
+  max-width: 560px;
   overflow-y: auto;
   height: 100%;
 }
@@ -148,7 +209,7 @@ async function onRestart() {
   color: var(--text-primary);
   font-size: 13px;
   outline: none;
-  width: 200px;
+  width: 220px;
   transition: border-color 0.15s;
 }
 .input:focus { border-color: var(--accent); }
@@ -157,6 +218,61 @@ async function onRestart() {
   font-size: 11px;
   color: var(--text-muted);
   margin: 0;
+}
+.hint-danger { color: var(--danger); }
+
+.version-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 300px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+.version-row strong { color: var(--text-primary); }
+
+.check-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 9px 0;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.check-field input {
+  width: 15px;
+  height: 15px;
+}
+
+.update-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 8px;
+}
+
+.progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 4px;
+  width: 300px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.2s ease;
+}
+
+.progress-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 30px;
+  text-align: right;
 }
 
 .actions { margin-top: 32px; }
@@ -175,16 +291,18 @@ async function onRestart() {
   color: #fff;
 }
 .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
-.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
   border: 1px solid var(--border);
 }
-.btn-ghost:hover { background: var(--bg-hover); }
+.btn-ghost:hover:not(:disabled) { background: var(--bg-hover); }
 
-/* ── Restart dialog ─────────────────────────────────────────────────── */
 .overlay {
   position: fixed;
   inset: 0;
