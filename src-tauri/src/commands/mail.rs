@@ -55,3 +55,21 @@ pub async fn get_mail_count(state: State<'_, AppState>) -> Result<u32, String> {
         .map_err(|e| e.to_string())?
         .map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn mark_as_read(state: State<'_, AppState>, id: String) -> Result<(), String> {
+    let pool = state.db_pool.clone();
+    tokio::task::spawn_blocking(move || repository::mark_as_read(&pool, &id))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_unread_count(state: State<'_, AppState>) -> Result<u32, String> {
+    let pool = state.db_pool.clone();
+    tokio::task::spawn_blocking(move || repository::get_unread_count(&pool))
+        .await
+        .map_err(|e| e.to_string())?
+        .map_err(|e| e.to_string())
+}

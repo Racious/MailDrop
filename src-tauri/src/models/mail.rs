@@ -9,6 +9,7 @@ pub struct MailSummary {
     pub received_at: String,
     pub size_bytes: u32,
     pub has_html: bool,
+    pub is_read: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

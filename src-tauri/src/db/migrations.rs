@@ -33,5 +33,14 @@ INSERT OR IGNORE INTO app_config(key, value) VALUES
 pub fn run(pool: &DbPool) -> Result<(), Box<dyn std::error::Error>> {
     let conn = pool.get()?;
     conn.execute_batch(SCHEMA)?;
+
+    // v0.1.2 — add is_read column (ignore error if already exists)
+    let _ = conn.execute_batch(
+        "ALTER TABLE mails ADD COLUMN is_read INTEGER NOT NULL DEFAULT 0;"
+    );
+    let _ = conn.execute_batch(
+        "INSERT OR IGNORE INTO app_config(key, value) VALUES ('enable_notifications', 'true');"
+    );
+
     Ok(())
 }

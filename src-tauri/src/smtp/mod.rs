@@ -6,6 +6,7 @@ use crate::db::{repository, DbPool};
 use crate::models::{Mail, MailSummary};
 use session::SmtpMessage;
 use tauri::{AppHandle, Emitter};
+use tauri_plugin_notification::NotificationExt;
 
 pub async fn handle_message(msg: SmtpMessage, pool: DbPool, app_handle: AppHandle) {
     let parsed = parser::parse(&msg.data);
@@ -41,6 +42,7 @@ pub async fn handle_message(msg: SmtpMessage, pool: DbPool, app_handle: AppHandl
         received_at: mail.received_at.clone(),
         size_bytes: mail.size_bytes,
         has_html: mail.has_html,
+        is_read: false,
     };
 
     let pool_save = pool.clone();
@@ -61,4 +63,19 @@ pub async fn handle_message(msg: SmtpMessage, pool: DbPool, app_handle: AppHandl
     });
 
     let _ = app_handle.emit("mail:received", &summary);
+
+    let notify_enabled = repository::get_config_value(&pool, "enable_notifications")
+        .ok()
+        .and_then(|v| v.parse::<bool>().ok())
+        .unwrap_or(true);
+
+    if notify_enabled {
+        let title = if mail.subject.is_empty() { "(無主旨)".to_string() } else { mail.subject.clone() };
+        let body = format!("來自：{}", mail.from_addr);
+        let _ = app_handle.notification()
+            .builder()
+            .title(&title)
+            .body(&body)
+            .show();
+    }
 }

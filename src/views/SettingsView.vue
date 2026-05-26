@@ -46,6 +46,14 @@
     </section>
 
     <section class="section">
+      <h3 class="section-title">Notifications</h3>
+      <label class="check-field">
+        <input v-model="draft.enable_notifications" type="checkbox" />
+        <span>Show desktop notification when new mail arrives</span>
+      </label>
+    </section>
+
+    <section class="section">
       <h3 class="section-title">Updates</h3>
       <div class="version-row">
         <span>Current version</span>

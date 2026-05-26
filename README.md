@@ -342,6 +342,16 @@ Frontend 透過 `@tauri-apps/api/core` 的 `invoke()` 呼叫 Rust commands。主
 
 ## 版本紀錄
 
+### v0.1.2
+**New Features**
+- 新增 Windows 系統通知，收到新信時自動跳出 toast（可於 Settings → Notifications 關閉）
+- 新增信件未讀狀態：未讀信件顯示藍點 + 加粗主旨，點開後自動標記已讀
+- Sidebar Inbox badge 改為顯示未讀數量
+
+### v0.1.1
+**Bug Fixes**
+- 修正 HTML 信件內連結點擊後在 MailDrop 內部顯示白頁的問題，現在會正確開啟系統瀏覽器
+
 ### v0.1.0
 **初始發布**
 - 本機 SMTP server（tokio 非同步，預設 port 1025）

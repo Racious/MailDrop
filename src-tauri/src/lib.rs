@@ -22,6 +22,7 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::Builder::new().callback(|app, _argv, _cwd| {
             tray::show_main_window(app);
         }).build())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
@@ -75,6 +76,8 @@ pub fn run() {
             commands::mail::delete_mail,
             commands::mail::clear_mails,
             commands::mail::get_mail_count,
+            commands::mail::mark_as_read,
+            commands::mail::get_unread_count,
             commands::config::get_config,
             commands::config::save_config,
             commands::config::get_smtp_status,

@@ -10,6 +10,7 @@ export const useConfigStore = defineStore('config', () => {
     max_mails: 500,
     check_updates_on_startup: true,
     auto_install_updates: false,
+    enable_notifications: true,
   })
   const smtpRunning = ref(false)
   const smtpError = ref<string | null>(null)

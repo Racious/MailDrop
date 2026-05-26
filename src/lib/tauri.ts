@@ -16,6 +16,12 @@ export const clearMails = () =>
 export const getMailCount = () =>
   invoke<number>('get_mail_count')
 
+export const markAsRead = (id: string) =>
+  invoke<void>('mark_as_read', { id })
+
+export const getUnreadCount = () =>
+  invoke<number>('get_unread_count')
+
 export const getConfig = () =>
   invoke<AppConfig>('get_config')
 

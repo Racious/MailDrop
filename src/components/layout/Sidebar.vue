@@ -12,7 +12,7 @@
       >
         <InboxIcon :size="16" />
         Inbox
-        <span v-if="totalCount > 0" class="badge">{{ totalCount }}</span>
+        <span v-if="unreadCount > 0" class="badge">{{ unreadCount }}</span>
       </button>
       <button
         class="nav-item"
@@ -40,7 +40,7 @@ import { useMailStore } from '@/stores/mail'
 import { storeToRefs } from 'pinia'
 
 const mailStore = useMailStore()
-const { totalCount } = storeToRefs(mailStore)
+const { unreadCount } = storeToRefs(mailStore)
 
 const showSettings = inject<Ref<boolean>>('showSettings')!
 </script>

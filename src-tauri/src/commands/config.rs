@@ -35,6 +35,11 @@ pub async fn save_config(
             "auto_install_updates",
             &cfg.auto_install_updates.to_string(),
         )?;
+        repository::set_config_value(
+            &pool,
+            "enable_notifications",
+            &cfg.enable_notifications.to_string(),
+        )?;
         Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
     })
     .await

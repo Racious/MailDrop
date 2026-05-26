@@ -26,7 +26,7 @@ pub fn list_mails(pool: &DbPool, offset: u32, limit: u32) -> RepoResult<Vec<Mail
     let conn = pool.get()?;
     let mut stmt = conn.prepare(
         "SELECT id, from_addr, from_name, subject, received_at, size_bytes,
-                html_body IS NOT NULL
+                html_body IS NOT NULL, is_read
          FROM mails ORDER BY received_at DESC LIMIT ?1 OFFSET ?2",
     )?;
     let rows = stmt.query_map(rusqlite::params![limit, offset], |row| {
@@ -38,9 +38,29 @@ pub fn list_mails(pool: &DbPool, offset: u32, limit: u32) -> RepoResult<Vec<Mail
             received_at: row.get(4)?,
             size_bytes: row.get::<_, i64>(5)? as u32,
             has_html: row.get::<_, bool>(6)?,
+            is_read: row.get::<_, bool>(7)?,
         })
     })?;
     Ok(rows.collect::<Result<Vec<_>, _>>()?)
+}
+
+pub fn mark_as_read(pool: &DbPool, id: &str) -> RepoResult<()> {
+    let conn = pool.get()?;
+    conn.execute(
+        "UPDATE mails SET is_read = 1 WHERE id = ?1",
+        rusqlite::params![id],
+    )?;
+    Ok(())
+}
+
+pub fn get_unread_count(pool: &DbPool) -> RepoResult<u32> {
+    let conn = pool.get()?;
+    let n: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM mails WHERE is_read = 0",
+        [],
+        |r| r.get(0),
+    )?;
+    Ok(n as u32)
 }
 
 pub fn get_mail(pool: &DbPool, id: &str) -> RepoResult<Option<Mail>> {
@@ -118,6 +138,7 @@ pub fn get_config(pool: &DbPool) -> RepoResult<AppConfig> {
             "max_mails"  => cfg.max_mails  = v.parse().unwrap_or(500),
             "check_updates_on_startup" => cfg.check_updates_on_startup = v.parse().unwrap_or(true),
             "auto_install_updates" => cfg.auto_install_updates = v.parse().unwrap_or(false),
+            "enable_notifications" => cfg.enable_notifications = v.parse().unwrap_or(true),
             _ => {}
         }
     }

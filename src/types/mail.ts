@@ -6,6 +6,7 @@ export interface MailSummary {
   received_at: string
   size_bytes: number
   has_html: boolean
+  is_read: boolean
 }
 
 export interface Mail extends MailSummary {
@@ -22,4 +23,5 @@ export interface AppConfig {
   max_mails: number
   check_updates_on_startup: boolean
   auto_install_updates: boolean
+  enable_notifications: boolean
 }

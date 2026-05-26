@@ -1,10 +1,11 @@
 <template>
   <div
     class="mail-item"
-    :class="{ selected: isSelected }"
+    :class="{ selected: isSelected, unread: !mail.is_read }"
     @click="$emit('select', mail.id)"
   >
     <div class="item-row">
+      <span v-if="!mail.is_read" class="unread-dot" />
       <span class="sender">{{ displayName }}</span>
       <span class="time">{{ formatDate(mail.received_at) }}</span>
     </div>
@@ -42,6 +43,16 @@ const displayName = computed(
 }
 .mail-item:hover    { background: var(--bg-hover); }
 .mail-item.selected { background: var(--bg-selected); }
+.mail-item.unread .sender { color: var(--accent); }
+.mail-item.unread .subject { color: var(--text-primary); font-weight: 500; }
+
+.unread-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
 
 .item-row {
   display: flex;
