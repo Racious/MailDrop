@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.1.5
+
+### New Features
+- 新增附件解析、保存、附件數標記與附件下載
+- 信件預覽新增附件面板，支援 MIME / 大小顯示、圖片縮圖與下載
+- 新增後端搜尋，可依寄件者、收件者、主旨、內文與附件檔名查找
+- 新增本機 REST API 搜尋參數、附件下載端點與 SMTP session log 查詢
+- Settings 新增 SMTP Session Log 檢視區，方便追蹤 SMTP 對話紀錄
+
+### Security / Hardening
+- HTML 預覽預設阻擋遠端資源，僅在使用者選擇載入時開放
+- HTML 連結僅允許 `http`、`https`、`mailto` 協定
+- SMTP session 增加逾時、單行長度與單封信大小限制
+
+### Documentation
+- README 補上附件、搜尋、REST API 與 SMTP session log 說明
+
 ## v0.1.4
 
 ### New Features

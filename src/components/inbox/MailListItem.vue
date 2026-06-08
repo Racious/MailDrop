@@ -12,6 +12,7 @@
     <div class="subject">{{ mail.subject || '(no subject)' }}</div>
     <div class="meta">
       <span v-if="mail.has_html" class="tag tag--html">HTML</span>
+      <span v-if="mail.attachment_count > 0" class="tag tag--files">{{ mail.attachment_count }} file</span>
       <span class="size">{{ formatSize(mail.size_bytes) }}</span>
     </div>
   </div>
@@ -99,8 +100,10 @@ const displayName = computed(
   border-radius: 3px;
 }
 .tag--html { background: #dbeafe; color: #1d4ed8; }
+.tag--files { background: #dcfce7; color: #15803d; }
 
 [data-theme="dark"] .tag--html { background: #1e3a5f; color: #93c5fd; }
+[data-theme="dark"] .tag--files { background: #14532d; color: #86efac; }
 
 .size {
   font-size: 11px;

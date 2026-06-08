@@ -7,6 +7,7 @@ export interface MailSummary {
   size_bytes: number
   has_html: boolean
   is_read: boolean
+  attachment_count: number
 }
 
 export interface Mail extends MailSummary {
@@ -15,6 +16,40 @@ export interface Mail extends MailSummary {
   text_body: string | null
   html_body: string | null
   raw_mime: string
+  attachments: MailAttachment[]
+}
+
+export interface MailAttachment {
+  id: string
+  mail_id: string
+  filename: string
+  content_type: string
+  size_bytes: number
+}
+
+export interface SmtpSessionLog {
+  id: string
+  mail_id: string | null
+  remote_addr: string
+  started_at: string
+  ended_at: string
+  transcript: string
+  error: string | null
+}
+
+export type MailSearchField = 'all' | 'from' | 'to' | 'subject' | 'body' | 'attachments'
+
+export interface MailSearchFilters {
+  query: string
+  field: MailSearchField
+  unreadOnly: boolean
+  hasAttachments: boolean
+}
+
+export interface MailSearchResult {
+  items: MailSummary[]
+  total_count: number
+  unread_count: number
 }
 
 export interface AppConfig {

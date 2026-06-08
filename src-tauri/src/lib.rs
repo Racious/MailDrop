@@ -1,3 +1,4 @@
+mod api;
 mod commands;
 mod db;
 mod models;
@@ -65,6 +66,12 @@ pub fn run() {
                 smtp::server::start(smtp_port, smtp_pool, smtp_handle, smtp_running_flag);
             });
 
+            let api_pool = pool.clone();
+            std::thread::spawn(move || {
+                let rt = tokio::runtime::Runtime::new().expect("API tokio runtime");
+                rt.block_on(api::start(api_pool));
+            });
+
             // ── Register AppState ─────────────────────────────────────────
             app.manage(AppState { db_pool: pool, smtp_running });
 
@@ -72,12 +79,16 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::mail::list_mails,
+            commands::mail::search_mails,
             commands::mail::get_mail,
             commands::mail::delete_mail,
             commands::mail::clear_mails,
             commands::mail::get_mail_count,
             commands::mail::mark_as_read,
             commands::mail::get_unread_count,
+            commands::mail::list_attachments,
+            commands::mail::get_attachment_content,
+            commands::mail::list_smtp_sessions,
             commands::config::get_config,
             commands::config::save_config,
             commands::config::get_smtp_status,

@@ -9,10 +9,14 @@ MailDrop 是一款以 Tauri 2 + Vue 3 開發的桌面 Email 測試工具，定�
 - 本機 SMTP server，預設監聽 `127.0.0.1:1025`
 - 收件清單與信件詳情檢視
 - HTML / Text / Raw MIME 分頁預覽
+- 附件列表與附件下載
 - 搜尋、刪除單封信、清空全部信件
+- 未讀、附件篩選
 - SQLite 本機保存收件資料
 - 可設定 SMTP port、主題模式與最大保存信件數
 - 收到新信時透過 Tauri event 即時更新 UI
+- SMTP session log，可檢視連線指令與回應
+- 本機 REST API，供整合測試查詢收件結果
 - System tray 與 close-to-tray 行為
 - Single instance，重複啟動時聚焦既有視窗
 
@@ -317,12 +321,33 @@ Frontend 透過 `@tauri-apps/api/core` 的 `invoke()` 呼叫 Rust commands。主
 | `delete_mail` | 刪除單封信件 |
 | `clear_mails` | 清空全部信件 |
 | `get_mail_count` | 取得信件總數 |
+| `list_attachments` | 取得指定信件附件清單 |
+| `get_attachment_content` | 取得指定附件內容 |
+| `list_smtp_sessions` | 取得最近 SMTP session log |
 | `get_config` | 讀取設定 |
 | `save_config` | 保存設定 |
 | `get_smtp_status` | 取得 SMTP server 狀態 |
 | `restart_app` | 重新啟動應用程式 |
 
 收到新信時，Rust backend 會 emit `mail:received` event，前端由 `useMailEvents()` 監聽並更新 Pinia store。
+
+## 本機 REST API
+
+MailDrop 會在本機啟動輕量 REST API，預設只綁定：
+
+```text
+http://127.0.0.1:8025
+```
+
+可用於 Playwright、Cypress、Spring Boot integration test 等自動化流程驗證測試信件。
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/messages?limit=100` | 取得最近信件摘要 |
+| `GET` | `/api/messages/{id}` | 取得單封信件詳情 |
+| `GET` | `/api/messages/{id}/attachments/{attachmentId}` | 下載附件 |
+| `GET` | `/api/sessions?limit=100` | 取得 SMTP session log |
+| `DELETE` | `/api/messages` | 清空全部信件 |
 
 ## SMTP 支援範圍
 

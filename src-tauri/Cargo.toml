@@ -1,6 +1,6 @@
 [package]
 name = "maildrop"
-version = "0.1.4"
+version = "0.1.5"
 description = "MailDrop - Developer Email Testing Desktop Tool"
 authors = []
 edition = "2021"

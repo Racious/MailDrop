@@ -7,9 +7,35 @@
         class="search"
         placeholder="Search..."
         type="search"
-        @input="$emit('search', query)"
+        @input="emitFilters"
       />
     </div>
+    <select v-model="field" class="field-select" title="Search field" @change="emitFilters">
+      <option value="all">All</option>
+      <option value="from">From</option>
+      <option value="to">To</option>
+      <option value="subject">Subject</option>
+      <option value="body">Body</option>
+      <option value="attachments">Files</option>
+    </select>
+    <button
+      class="filter-btn"
+      :class="{ active: unreadOnly }"
+      title="Unread only"
+      type="button"
+      @click="toggleUnread"
+    >
+      Unread
+    </button>
+    <button
+      class="filter-btn"
+      :class="{ active: hasAttachments }"
+      title="Has attachments"
+      type="button"
+      @click="toggleAttachments"
+    >
+      Files
+    </button>
     <button class="clear-btn" title="Clear all mails" @click="onClear">
       <Trash2Icon :size="14" />
     </button>
@@ -20,10 +46,33 @@
 import { ref } from 'vue'
 import { SearchIcon, Trash2Icon } from '@lucide/vue'
 import { useMailStore } from '@/stores/mail'
+import type { MailSearchField, MailSearchFilters } from '@/types/mail'
 
-defineEmits<{ search: [q: string] }>()
+const emit = defineEmits<{ filters: [filters: MailSearchFilters] }>()
 const mailStore = useMailStore()
 const query = ref('')
+const field = ref<MailSearchField>('all')
+const unreadOnly = ref(false)
+const hasAttachments = ref(false)
+
+function emitFilters() {
+  emit('filters', {
+    query: query.value,
+    field: field.value,
+    unreadOnly: unreadOnly.value,
+    hasAttachments: hasAttachments.value,
+  })
+}
+
+function toggleUnread() {
+  unreadOnly.value = !unreadOnly.value
+  emitFilters()
+}
+
+function toggleAttachments() {
+  hasAttachments.value = !hasAttachments.value
+  emitFilters()
+}
 
 async function onClear() {
   if (confirm('Clear all mails?')) {
@@ -67,6 +116,39 @@ async function onClear() {
   transition: border-color 0.15s;
 }
 .search:focus { border-color: var(--accent); }
+
+.field-select {
+  height: 28px;
+  max-width: 94px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-base);
+  color: var(--text-secondary);
+  font-size: 11px;
+  outline: none;
+  flex-shrink: 0;
+}
+.field-select:focus { border-color: var(--accent); }
+
+.filter-btn {
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.filter-btn.active,
+.filter-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--bg-selected);
+}
 
 .clear-btn {
   display: flex;

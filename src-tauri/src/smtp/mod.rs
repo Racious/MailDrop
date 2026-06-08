@@ -3,12 +3,12 @@ pub mod server;
 pub mod session;
 
 use crate::db::{repository, DbPool};
-use crate::models::{Mail, MailSummary};
+use crate::models::{Mail, MailAttachmentData, MailSummary};
 use session::SmtpMessage;
 use tauri::{AppHandle, Emitter, Manager, UserAttentionType};
 use tauri_plugin_notification::NotificationExt;
 
-pub async fn handle_message(msg: SmtpMessage, pool: DbPool, app_handle: AppHandle) {
+pub async fn handle_message(msg: SmtpMessage, pool: DbPool, app_handle: AppHandle) -> String {
     let parsed = parser::parse(&msg.data);
 
     let mail = Mail {
@@ -32,7 +32,21 @@ pub async fn handle_message(msg: SmtpMessage, pool: DbPool, app_handle: AppHandl
         size_bytes: msg.data.len() as u32,
         received_at: chrono::Utc::now().to_rfc3339(),
         has_html: parsed.html_body.is_some(),
+        is_read: false,
+        attachment_count: parsed.attachments.len() as u32,
+        attachments: Vec::new(),
     };
+
+    let attachments = parsed
+        .attachments
+        .into_iter()
+        .map(|attachment| MailAttachmentData {
+            id: uuid::Uuid::new_v4().to_string(),
+            filename: attachment.filename,
+            content_type: attachment.content_type,
+            content: attachment.content,
+        })
+        .collect::<Vec<_>>();
 
     let summary = MailSummary {
         id: mail.id.clone(),
@@ -43,13 +57,15 @@ pub async fn handle_message(msg: SmtpMessage, pool: DbPool, app_handle: AppHandl
         size_bytes: mail.size_bytes,
         has_html: mail.has_html,
         is_read: false,
+        attachment_count: attachments.len() as u32,
     };
 
     let pool_save = pool.clone();
     let mail_clone = mail.clone();
-    if let Err(e) = tokio::task::spawn_blocking(move || repository::insert_mail(&pool_save, &mail_clone)).await {
+    let attachments_clone = attachments.clone();
+    if let Err(e) = tokio::task::spawn_blocking(move || repository::insert_mail(&pool_save, &mail_clone, &attachments_clone)).await {
         eprintln!("[smtp] failed to save mail: {e}");
-        return;
+        return mail.id;
     }
 
     // Enforce max_mails limit
@@ -86,4 +102,6 @@ pub async fn handle_message(msg: SmtpMessage, pool: DbPool, app_handle: AppHandl
             }
         }
     }
+
+    mail.id
 }

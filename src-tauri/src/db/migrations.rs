@@ -17,6 +17,31 @@ CREATE TABLE IF NOT EXISTS mails (
 
 CREATE INDEX IF NOT EXISTS idx_mails_received_at ON mails(received_at DESC);
 
+CREATE TABLE IF NOT EXISTS mail_attachments (
+    id           TEXT PRIMARY KEY,
+    mail_id      TEXT NOT NULL,
+    filename     TEXT NOT NULL,
+    content_type TEXT NOT NULL,
+    size_bytes   INTEGER NOT NULL DEFAULT 0,
+    content      BLOB NOT NULL,
+    FOREIGN KEY(mail_id) REFERENCES mails(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_mail_attachments_mail_id ON mail_attachments(mail_id);
+
+CREATE TABLE IF NOT EXISTS smtp_sessions (
+    id          TEXT PRIMARY KEY,
+    mail_id     TEXT,
+    remote_addr TEXT NOT NULL,
+    started_at  TEXT NOT NULL,
+    ended_at    TEXT NOT NULL,
+    transcript  TEXT NOT NULL,
+    error       TEXT,
+    FOREIGN KEY(mail_id) REFERENCES mails(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_smtp_sessions_started_at ON smtp_sessions(started_at DESC);
+
 CREATE TABLE IF NOT EXISTS app_config (
     key   TEXT PRIMARY KEY,
     value TEXT NOT NULL

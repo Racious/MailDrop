@@ -1,8 +1,26 @@
 import { invoke } from '@tauri-apps/api/core'
-import type { AppConfig, Mail, MailSummary } from '@/types/mail'
+import type {
+  AppConfig,
+  Mail,
+  MailAttachment,
+  MailSearchFilters,
+  MailSearchResult,
+  MailSummary,
+  SmtpSessionLog,
+} from '@/types/mail'
 
 export const listMails = (offset: number, limit: number) =>
   invoke<MailSummary[]>('list_mails', { offset, limit })
+
+export const searchMails = (filters: MailSearchFilters, offset: number, limit: number) =>
+  invoke<MailSearchResult>('search_mails', {
+    query: filters.query,
+    field: filters.field,
+    unreadOnly: filters.unreadOnly,
+    hasAttachments: filters.hasAttachments,
+    offset,
+    limit,
+  })
 
 export const getMail = (id: string) =>
   invoke<Mail>('get_mail', { id })
@@ -21,6 +39,15 @@ export const markAsRead = (id: string) =>
 
 export const getUnreadCount = () =>
   invoke<number>('get_unread_count')
+
+export const listAttachments = (mailId: string) =>
+  invoke<MailAttachment[]>('list_attachments', { mailId })
+
+export const getAttachmentContent = (mailId: string, attachmentId: string) =>
+  invoke<number[]>('get_attachment_content', { mailId, attachmentId })
+
+export const listSmtpSessions = (limit = 100) =>
+  invoke<SmtpSessionLog[]>('list_smtp_sessions', { limit })
 
 export const getConfig = () =>
   invoke<AppConfig>('get_config')

@@ -1,4 +1,6 @@
 use crate::db::DbPool;
+use crate::db::repository;
+use crate::models::SmtpSessionLog;
 use crate::smtp;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -31,13 +33,34 @@ pub fn start(port: u16, pool: DbPool, app_handle: AppHandle, running: Arc<Atomic
 
         loop {
             match listener.accept().await {
-                Ok((stream, _)) => {
+                Ok((stream, remote_addr)) => {
                     let pool = pool.clone();
                     let handle = app_handle.clone();
                     tokio::spawn(async move {
+                        let session_id = uuid::Uuid::new_v4().to_string();
+                        let started_at = chrono::Utc::now().to_rfc3339();
                         match smtp::session::handle(stream).await {
-                            Ok(Some(msg)) => smtp::handle_message(msg, pool, handle).await,
-                            Ok(None) => {}
+                            Ok(result) => {
+                                let mut mail_id = None;
+                                if let Some(msg) = result.message {
+                                    let id = smtp::handle_message(msg, pool.clone(), handle).await;
+                                    mail_id = Some(id);
+                                }
+                                let session = SmtpSessionLog {
+                                    id: session_id,
+                                    mail_id,
+                                    remote_addr: remote_addr.to_string(),
+                                    started_at,
+                                    ended_at: chrono::Utc::now().to_rfc3339(),
+                                    transcript: result.transcript,
+                                    error: result.error,
+                                };
+                                let pool_log = pool.clone();
+                                let _ = tokio::task::spawn_blocking(move || {
+                                    repository::insert_smtp_session(&pool_log, &session)
+                                })
+                                .await;
+                            }
                             Err(e) => eprintln!("[smtp] session error: {e}"),
                         }
                     });

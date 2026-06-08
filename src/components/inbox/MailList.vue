@@ -13,8 +13,8 @@
         }"
       >
         <MailListItem
-          :mail="filtered[vRow.index]"
-          :is-selected="filtered[vRow.index]?.id === selectedMailId"
+          :mail="mails[vRow.index]"
+          :is-selected="mails[vRow.index]?.id === selectedMailId"
           @select="mailStore.fetchMailDetail"
         />
       </div>
@@ -29,27 +29,14 @@ import { storeToRefs } from 'pinia'
 import { useMailStore } from '@/stores/mail'
 import MailListItem from './MailListItem.vue'
 
-const props = defineProps<{ query: string }>()
-
 const mailStore = useMailStore()
 const { mails, selectedMailId } = storeToRefs(mailStore)
 
 const containerRef = ref<HTMLElement | null>(null)
 
-const filtered = computed(() =>
-  props.query
-    ? mails.value.filter(
-        (m) =>
-          m.subject.toLowerCase().includes(props.query.toLowerCase()) ||
-          m.from_addr.toLowerCase().includes(props.query.toLowerCase()) ||
-          (m.from_name ?? '').toLowerCase().includes(props.query.toLowerCase()),
-      )
-    : mails.value,
-)
-
 const rowVirtualizer = useVirtualizer(
   computed(() => ({
-    count: filtered.value.length,
+    count: mails.value.length,
     getScrollElement: () => containerRef.value,
     estimateSize: () => 72,
     overscan: 5,

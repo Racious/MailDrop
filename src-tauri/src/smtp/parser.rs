@@ -1,4 +1,4 @@
-use mail_parser::MessageParser;
+use mail_parser::{MessageParser, MimeHeaders};
 
 pub struct ParsedMail {
     pub message_id: Option<String>,
@@ -8,6 +8,13 @@ pub struct ParsedMail {
     pub subject: String,
     pub text_body: Option<String>,
     pub html_body: Option<String>,
+    pub attachments: Vec<ParsedAttachment>,
+}
+
+pub struct ParsedAttachment {
+    pub filename: String,
+    pub content_type: String,
+    pub content: Vec<u8>,
 }
 
 impl Default for ParsedMail {
@@ -20,6 +27,7 @@ impl Default for ParsedMail {
             subject: String::new(),
             text_body: None,
             html_body: None,
+            attachments: Vec::new(),
         }
     }
 }
@@ -39,6 +47,25 @@ pub fn parse(raw: &[u8]) -> ParsedMail {
         .map(|a| all_emails(a))
         .unwrap_or_default();
 
+    let attachments = msg
+        .attachments()
+        .enumerate()
+        .map(|(idx, part)| {
+            let content_type = part
+                .content_type()
+                .map(content_type_to_string)
+                .unwrap_or_else(|| "application/octet-stream".to_string());
+            ParsedAttachment {
+                filename: part
+                    .attachment_name()
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| format!("attachment-{}", idx + 1)),
+                content_type,
+                content: part.contents().to_vec(),
+            }
+        })
+        .collect();
+
     ParsedMail {
         message_id: msg.message_id().map(|s| s.to_string()),
         from_addr,
@@ -47,6 +74,14 @@ pub fn parse(raw: &[u8]) -> ParsedMail {
         subject: msg.subject().map(|s| s.to_string()).unwrap_or_default(),
         text_body: msg.body_text(0).map(|s| s.into_owned()),
         html_body: msg.body_html(0).map(|s| s.into_owned()),
+        attachments,
+    }
+}
+
+fn content_type_to_string(content_type: &mail_parser::ContentType) -> String {
+    match content_type.subtype() {
+        Some(subtype) => format!("{}/{}", content_type.ctype(), subtype),
+        None => content_type.ctype().to_string(),
     }
 }
 

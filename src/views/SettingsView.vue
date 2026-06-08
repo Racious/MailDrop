@@ -91,6 +91,25 @@
       <p v-if="errorMessage" class="hint hint-danger">{{ errorMessage }}</p>
     </section>
 
+    <section class="section">
+      <div class="section-heading">
+        <h3 class="section-title">SMTP Session Log</h3>
+        <button class="btn btn-ghost btn-small" type="button" @click="loadSessions">Refresh</button>
+      </div>
+      <div v-if="sessions.length" class="session-list">
+        <details v-for="session in sessions" :key="session.id" class="session-item">
+          <summary>
+            <span>{{ session.mail_id ? 'Accepted mail' : 'No mail captured' }}</span>
+            <span class="session-time">{{ formatDate(session.started_at) }}</span>
+          </summary>
+          <p v-if="session.error" class="hint hint-danger">{{ session.error }}</p>
+          <pre>{{ session.transcript }}</pre>
+        </details>
+      </div>
+      <p v-else class="hint">No SMTP sessions recorded yet.</p>
+      <p class="hint">REST API is available locally at http://127.0.0.1:8025/api/messages</p>
+    </section>
+
     <div class="actions">
       <button class="btn btn-primary" :disabled="saving" @click="onSave">
         {{ saving ? 'Saving...' : 'Save Settings' }}
@@ -113,12 +132,13 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useConfigStore } from '@/stores/config'
 import { useUpdateStore } from '@/stores/update'
-import { restartApp } from '@/lib/tauri'
-import type { AppConfig } from '@/types/mail'
+import { listSmtpSessions, restartApp } from '@/lib/tauri'
+import { formatDate } from '@/lib/utils'
+import type { AppConfig, SmtpSessionLog } from '@/types/mail'
 
 const configStore = useConfigStore()
 const updateStore = useUpdateStore()
@@ -137,8 +157,10 @@ const {
 const draft = reactive<AppConfig>({ ...config.value })
 const saving = ref(false)
 const showRestartDialog = ref(false)
+const sessions = ref<SmtpSessionLog[]>([])
 
 watch(config, (c) => Object.assign(draft, c), { deep: true })
+onMounted(() => void loadSessions())
 
 async function onSave() {
   const portChanged = draft.smtp_port !== config.value.smtp_port
@@ -166,6 +188,10 @@ async function onInstallUpdate() {
 
 async function onOpenReleasePage() {
   await updateStore.openReleasePage()
+}
+
+async function loadSessions() {
+  sessions.value = await listSmtpSessions(20)
 }
 </script>
 
@@ -195,6 +221,18 @@ async function onOpenReleasePage() {
   letter-spacing: 0.05em;
   color: var(--text-muted);
   margin: 0 0 12px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.btn-small {
+  padding: 5px 10px;
+  font-size: 11px;
 }
 
 .field {
@@ -284,6 +322,47 @@ async function onOpenReleasePage() {
 }
 
 .actions { margin-top: 32px; }
+
+.session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-item {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface);
+}
+
+.session-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.session-time {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.session-item pre {
+  margin: 0;
+  padding: 10px;
+  max-height: 220px;
+  overflow: auto;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
 
 .btn {
   padding: 8px 20px;
